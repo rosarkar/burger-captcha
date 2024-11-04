@@ -25,61 +25,95 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
-        }
-        
-        .success-message {
-            display: none;
-            background: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            text-align: center;
+            color: #333;
         }
 
-        .failure-message {
+        .security-features {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .security-features h3 {
+            color: #d52b1e;
+            margin-top: 0;
+        }
+        
+        .success-message, .failure-message {
             display: none;
-            background: #f44336;
-            color: white;
             padding: 15px;
             border-radius: 5px;
             margin-top: 20px;
             text-align: center;
+            color: white;
         }
+
+        .success-message { background: #4CAF50; }
+        .failure-message { background: #f44336; }
         
         .ingredient {
+            width: 150px;
+            height: 100px;
+            background: #f0e6d2;
+            border-radius: 10px;
             cursor: grab;
             user-select: none;
             transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 2px solid #ccc;
+            position: relative;
         }
+        
+        .ingredient-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-top: 10px;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .bun { background: #ffb700; }
+        .patty { background: #8b4513; }
         
         .ingredient.dragging {
             cursor: grabbing;
             transform: scale(1.05);
+            z-index: 1000;
         }
         
         .drop-zone {
             background: rgba(255, 215, 0, 0.3);
             border: 2px dashed #ffd700;
             border-radius: 10px;
-            min-height: 100px;
+            min-height: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            margin-top: 40px;
+            gap: 10px;
         }
 
         .obstacle {
             position: absolute;
             pointer-events: none;
+            font-size: 24px;
+            z-index: 100;
+            transition: all 0.1s linear;
         }
 
         .timer-bar {
-            height: 20px;
-            background: #eee;
-            border-radius: 10px;
+            height: 30px;
+            background: #f8f8f8;
+            border-radius: 15px;
             overflow: hidden;
             margin-bottom: 20px;
+            border: 1px solid #ddd;
         }
 
         .timer-progress {
@@ -87,6 +121,14 @@
             background: #d52b1e;
             width: 100%;
             transition: width linear 30s;
+        }
+
+        .ingredients-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            padding: 0 20px;
+            gap: 20px;
         }
 
         .reset-button {
@@ -98,10 +140,21 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
         }
 
         .reset-button:hover {
             background: #b71c1c;
+        }
+
+        .stacked-ingredient {
+            padding: 10px;
+            background: #f0e6d2;
+            border-radius: 5px;
+            margin: 2px 0;
+            width: 80%;
+            text-align: center;
         }
     </style>
 </head>
@@ -110,36 +163,49 @@
         <h1>Interactive Brand CAPTCHA</h1>
         <p>Stack the burger ingredients in the correct order while avoiding obstacles</p>
     </div>
+
+    <div class="security-features">
+        <h3>Security Features</h3>
+        <ul>
+            <li>Time-sensitive completion (30-second limit)</li>
+            <li>Moving obstacle patterns requiring human reflexes</li>
+            <li>Order-specific assembly testing cognitive ability</li>
+            <li>Drag-and-drop precision requiring fine motor control</li>
+            <li>Multiple intersecting paths preventing automated solutions</li>
+            <li>Real-time collision detection</li>
+        </ul>
+    </div>
     
     <div class="captcha-container" id="captchaContainer">
         <div class="timer-bar">
             <div class="timer-progress" id="timerProgress"></div>
         </div>
 
-        <!-- Ingredients -->
-        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+        <div class="ingredients-container">
             <div class="ingredient" draggable="true" data-type="base" data-order="1">
                 Base Bun
+                <div class="ingredient-circle bun"></div>
             </div>
             <div class="ingredient" draggable="true" data-type="patty" data-order="2">
                 Beef Patty
+                <div class="ingredient-circle patty"></div>
             </div>
             <div class="ingredient" draggable="true" data-type="middle" data-order="3">
                 Middle Bun
+                <div class="ingredient-circle bun"></div>
             </div>
             <div class="ingredient" draggable="true" data-type="crown" data-order="4">
                 Crown Bun
+                <div class="ingredient-circle bun"></div>
             </div>
         </div>
 
-        <!-- Moving Obstacles -->
         <div id="obstacle1" class="obstacle">⚠️</div>
         <div id="obstacle2" class="obstacle">⚠️</div>
         <div id="obstacle3" class="obstacle">⚠️</div>
 
-        <!-- Drop Zone -->
         <div class="drop-zone" id="dropZone">
-            Drop ingredients here
+            Drop ingredients here to build your burger
         </div>
     </div>
 
@@ -158,12 +224,14 @@
         let timerInterval = null;
         let currentStack = [];
         let obstacles = [];
+        let collisionDetected = false;
         
         // Initialize the game
         function initGame() {
             // Reset variables
             currentStack = [];
-            document.getElementById('dropZone').innerHTML = 'Drop ingredients here';
+            collisionDetected = false;
+            document.getElementById('dropZone').innerHTML = 'Drop ingredients here to build your burger';
             document.getElementById('successMessage').style.display = 'none';
             document.getElementById('failureMessage').style.display = 'none';
             
@@ -177,14 +245,20 @@
             // Start timer
             startTime = Date.now();
             startTimer();
+
+            // Reset ingredients
+            document.querySelectorAll('.ingredient').forEach(ing => {
+                ing.style.opacity = '1';
+                ing.setAttribute('draggable', 'true');
+            });
         }
 
         // Initialize obstacle movements
         function initObstacles() {
             obstacles = [
-                { element: document.getElementById('obstacle1'), x: 0, y: 0, dx: 2, dy: 1 },
-                { element: document.getElementById('obstacle2'), x: 200, y: 0, dx: -2, dy: 1.5 },
-                { element: document.getElementById('obstacle3'), x: 400, y: 0, dx: 1, dy: -1 }
+                { element: document.getElementById('obstacle1'), x: 0, y: 0, dx: 3, dy: 2 },
+                { element: document.getElementById('obstacle2'), x: 200, y: 0, dx: -3, dy: 2.5 },
+                { element: document.getElementById('obstacle3'), x: 400, y: 0, dx: 2.5, dy: -2 }
             ];
 
             // Start obstacle animation
@@ -220,10 +294,25 @@
             
             // Check time after 30 seconds
             setTimeout(() => {
-                if (currentStack.length < 4) {
+                if (currentStack.length < 4 && !collisionDetected) {
                     showFailure();
                 }
             }, 30000);
+        }
+
+        // Check for collisions
+        function checkCollision(x, y) {
+            const buffer = 30; // Collision detection buffer
+            
+            return obstacles.some(obstacle => {
+                const obstacleRect = obstacle.element.getBoundingClientRect();
+                return (
+                    x > obstacleRect.left - buffer &&
+                    x < obstacleRect.right + buffer &&
+                    y > obstacleRect.top - buffer &&
+                    y < obstacleRect.bottom + buffer
+                );
+            });
         }
 
         // Initialize drag and drop
@@ -244,17 +333,30 @@
         const dropZone = document.getElementById('dropZone');
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
+            if (!collisionDetected) {
+                e.dataTransfer.dropEffect = 'move';
+                
+                // Check for collision during drag
+                if (checkCollision(e.clientX, e.clientY)) {
+                    collisionDetected = true;
+                    showFailure();
+                }
+            }
         });
 
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
+            if (collisionDetected) return;
+
             const type = e.dataTransfer.getData('text/plain');
-            const order = parseInt(document.querySelector(`[data-type="${type}"]`).dataset.order);
+            const ingredient = document.querySelector(`[data-type="${type}"]`);
+            const order = parseInt(ingredient.dataset.order);
 
             // Check if this is the correct next piece
             if (order === currentStack.length + 1) {
                 currentStack.push(type);
+                ingredient.style.opacity = '0.5';
+                ingredient.setAttribute('draggable', 'false');
                 updateDropZone();
                 checkCompletion();
             }
@@ -262,16 +364,19 @@
 
         // Update drop zone display
         function updateDropZone() {
-            dropZone.innerHTML = currentStack.map(type => 
-                `<div>${document.querySelector(`[data-type="${type}"]`).textContent}</div>`
-            ).join('');
+            dropZone.innerHTML = currentStack.length === 0 ? 
+                'Drop ingredients here to build your burger' :
+                currentStack.map(type => {
+                    const ingredient = document.querySelector(`[data-type="${type}"]`);
+                    return `<div class="stacked-ingredient">${ingredient.textContent.trim()}</div>`;
+                }).join('');
         }
 
         // Check for completion
         function checkCompletion() {
             if (currentStack.length === 4) {
                 const timeTaken = Date.now() - startTime;
-                if (timeTaken <= 30000) {
+                if (timeTaken <= 30000 && !collisionDetected) {
                     showSuccess();
                 } else {
                     showFailure();
