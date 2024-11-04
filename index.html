@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Brand CAPTCHA</title>
     <style>
+        :root {
+            --brand-primary: #d52b1e;
+            --brand-secondary: #ffc72c;
+            --brand-text: #282828;
+        }
+
         body {
             font-family: Arial, sans-serif;
             max-width: 1000px;
@@ -23,10 +29,54 @@
             min-height: 500px;
         }
         
-        .header {
+        .brand-header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #333;
+            padding: 20px;
+            background: var(--brand-primary);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .brand-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            background: white;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--brand-primary);
+        }
+
+        .brand-slogan {
+            font-style: italic;
+            margin: 10px 0;
+            color: var(--brand-secondary);
+            font-size: 1.2em;
+        }
+
+        .brand-points {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .brand-point {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 3px solid var(--brand-primary);
         }
 
         .info-section {
@@ -38,7 +88,7 @@
         }
 
         .info-section h3 {
-            color: #d52b1e;
+            color: var(--brand-primary);
             margin-top: 0;
             font-size: 1.4em;
         }
@@ -64,7 +114,7 @@
         }
 
         .security-feature h4 {
-            color: #d52b1e;
+            color: var(--brand-primary);
             margin-top: 0;
             margin-bottom: 10px;
         }
@@ -73,7 +123,8 @@
             margin: 0;
             font-size: 0.9em;
         }
-        
+</style>
+<style>
         .success-message, .failure-message {
             display: none;
             padding: 15px;
@@ -83,13 +134,29 @@
             color: white;
         }
 
-        .success-message { background: #4CAF50; }
+        .success-message { 
+            background: var(--brand-primary);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .success-offer {
+            background: var(--brand-secondary);
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
         .failure-message { background: #f44336; }
         
         .ingredient {
             width: 150px;
-            height: 100px;
-            background: #f0e6d2;
+            height: 120px;
+            background: white;
+            border: 2px solid var(--brand-primary);
             border-radius: 10px;
             cursor: grab;
             user-select: none;
@@ -99,16 +166,30 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 2px solid #ccc;
             position: relative;
+            padding: 10px;
         }
         
         .ingredient-circle {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-top: 10px;
+            margin: 5px 0;
             border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        .ingredient-name {
+            color: var(--brand-text);
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .ingredient-description {
+            font-size: 0.8em;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
         }
 
         .bun { background: #ffb700; }
@@ -122,7 +203,7 @@
         
         .drop-zone {
             background: rgba(255, 215, 0, 0.3);
-            border: 2px dashed #ffd700;
+            border: 2px dashed var(--brand-secondary);
             border-radius: 10px;
             min-height: 200px;
             display: flex;
@@ -155,7 +236,7 @@
 
         .timer-progress {
             height: 100%;
-            background: #d52b1e;
+            background: var(--brand-primary);
             width: 100%;
             transition: width linear 1s;
             position: absolute;
@@ -187,7 +268,7 @@
             display: block;
             margin: 20px auto;
             padding: 10px 20px;
-            background: #d52b1e;
+            background: var(--brand-primary);
             color: white;
             border: none;
             border-radius: 5px;
@@ -214,12 +295,47 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+
+        .brand-fact {
+            position: absolute;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.9em;
+            color: var(--brand-text);
+            max-width: 200px;
+            display: none;
+            animation: float 5s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Interactive Brand CAPTCHA</h1>
-        <p>Stack the burger ingredients in the correct order while avoiding obstacles</p>
+    <div class="brand-header">
+        <div class="brand-logo">🍔</div>
+        <h1>BurgerBliss Verification</h1>
+        <div class="brand-slogan">Crafting Joy, One Burger at a Time</div>
+        <p>Build our signature burger while discovering what makes us special</p>
+    </div>
+
+    <div class="brand-points">
+        <div class="brand-point">
+            <h3>100% Fresh</h3>
+            <p>Never frozen, always fresh ingredients</p>
+        </div>
+        <div class="brand-point">
+            <h3>Local Sources</h3>
+            <p>Supporting local farmers since 1985</p>
+        </div>
+        <div class="brand-point">
+            <h3>Made with Love</h3>
+            <p>Handcrafted by passionate chefs</p>
+        </div>
     </div>
 
     <div class="captcha-container" id="captchaContainer">
@@ -236,13 +352,21 @@
         <div id="obstacle2" class="obstacle">⚠️</div>
         <div id="obstacle3" class="obstacle">⚠️</div>
 
+        <div id="brandFact1" class="brand-fact">Our buns are baked fresh every 4 hours</div>
+        <div id="brandFact2" class="brand-fact">Our beef is sourced from local farms within 50 miles</div>
+        <div id="brandFact3" class="brand-fact">We've served over 1 million happy customers</div>
+
         <div class="drop-zone" id="dropZone">
             Drop ingredients here to build your burger
         </div>
     </div>
 
     <div class="success-message" id="successMessage">
-        Verification successful! Thank you for completing the challenge.
+        <h3>Great job! You've built our signature burger!</h3>
+        <p>You clearly have great taste in burgers</p>
+        <div class="success-offer">
+            🎉 Special Offer: Use code "CAPTCHA10" for 10% off your next order! 🎉
+        </div>
     </div>
     <div class="failure-message" id="failureMessage">
         Challenge failed. Please try again!
@@ -300,14 +424,40 @@
             return array;
         }
 
+        function showRandomBrandFact() {
+            if (!gameActive) return;
+            
+            const facts = document.querySelectorAll('.brand-fact');
+            const randomFact = facts[Math.floor(Math.random() * facts.length)];
+            
+            const container = document.getElementById('captchaContainer');
+            const bounds = container.getBoundingClientRect();
+            
+            randomFact.style.left = Math.random() * (bounds.width - 200) + 'px';
+            randomFact.style.top = Math.random() * (bounds.height - 100) + 'px';
+            
+            randomFact.style.display = 'block';
+            
+            setTimeout(() => {
+                randomFact.style.display = 'none';
+                if (gameActive) showRandomBrandFact();
+            }, 3000);
+        }
+
         function createIngredients() {
             const container = document.getElementById('ingredientsContainer');
             container.innerHTML = '';
             
-            // Create a copy of ingredients and shuffle it
+            const descriptions = {
+                'base': 'Freshly baked artisan bun',
+                'bottomPatty': 'Premium grass-fed beef',
+                'middle': 'Classic sesame layer',
+                'topPatty': 'Double the flavor',
+                'crown': 'Golden-brown perfection'
+            };
+            
             const shuffledIngredients = shuffleArray([...ingredients]);
             
-            // Create the ingredients in random order but maintain correct stacking order
             shuffledIngredients.forEach((ing, index) => {
                 const div = document.createElement('div');
                 div.className = 'ingredient';
@@ -316,14 +466,14 @@
                 div.dataset.order = ingredients.findIndex(i => i.type === ing.type) + 1;
                 
                 div.innerHTML = `
-                    ${ing.name}
+                    <div class="ingredient-name">${ing.name}</div>
                     <div class="ingredient-circle ${ing.circle}"></div>
+                    <div class="ingredient-description">${descriptions[ing.type]}</div>
                 `;
                 
                 container.appendChild(div);
             });
 
-            // Set up drag events for new ingredients
             initDragEvents();
         }
 
@@ -347,39 +497,32 @@
         }
 
         function initGame() {
-            // Reset variables
             currentStack = [];
             collisionDetected = false;
             gameActive = true;
             
-            // Reset UI
             document.getElementById('dropZone').innerHTML = 'Drop ingredients here to build your burger';
             document.getElementById('successMessage').style.display = 'none';
             document.getElementById('failureMessage').style.display = 'none';
             
-            // Reset and create new ingredients
             createIngredients();
             
-            // Reset timer UI
             const timerProgress = document.getElementById('timerProgress');
             timerProgress.style.transition = 'none';
             timerProgress.style.width = '100%';
             
-            // Force a reflow to ensure the transition gets reset
             void timerProgress.offsetWidth;
             
-            // Re-enable transition and start countdown
             timerProgress.style.transition = 'width linear 30s';
             timerProgress.style.width = '0%';
             
-            // Reset timer text
             updateTimerText(30);
             
-            // Initialize obstacles
             initObstacles();
             
-            // Start timer
             startTimer();
+            
+            setTimeout(showRandomBrandFact, 2000);
         }
 
         function updateTimerText(seconds) {
@@ -389,7 +532,7 @@
 
         function startTimer() {
             const startTime = Date.now();
-            const duration = 30000; // 30 seconds in milliseconds
+            const duration = 30000;
             
             if (timerInterval) {
                 clearInterval(timerInterval);
@@ -514,8 +657,11 @@
         }
 
         function showSuccess() {
-            document.getElementById('successMessage').style.display = 'block';
+            const message = document.getElementById('successMessage');
+            message.style.display = 'flex';
             document.getElementById('failureMessage').style.display = 'none';
+            
+            console.log('Brand engagement completed successfully');
         }
 
         function showFailure() {
@@ -525,7 +671,6 @@
 
         document.getElementById('resetButton').addEventListener('click', initGame);
 
-        // Initialize game on load
         initGame();
     </script>
 </body>
