@@ -295,24 +295,6 @@
             cursor: not-allowed;
             pointer-events: none;
         }
-
-        .brand-fact {
-            position: absolute;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            font-size: 0.9em;
-            color: var(--brand-text);
-            max-width: 200px;
-            display: none;
-            animation: float 5s infinite ease-in-out;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
     </style>
 </head>
 <body>
@@ -351,10 +333,6 @@
         <div id="obstacle1" class="obstacle">⚠️</div>
         <div id="obstacle2" class="obstacle">⚠️</div>
         <div id="obstacle3" class="obstacle">⚠️</div>
-
-        <div id="brandFact1" class="brand-fact">Our buns are baked fresh every 4 hours</div>
-        <div id="brandFact2" class="brand-fact">Our beef is sourced from local farms within 50 miles</div>
-        <div id="brandFact3" class="brand-fact">We've served over 1 million happy customers</div>
 
         <div class="drop-zone" id="dropZone">
             Drop ingredients here to build your burger
@@ -422,26 +400,6 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
-        }
-
-        function showRandomBrandFact() {
-            if (!gameActive) return;
-            
-            const facts = document.querySelectorAll('.brand-fact');
-            const randomFact = facts[Math.floor(Math.random() * facts.length)];
-            
-            const container = document.getElementById('captchaContainer');
-            const bounds = container.getBoundingClientRect();
-            
-            randomFact.style.left = Math.random() * (bounds.width - 200) + 'px';
-            randomFact.style.top = Math.random() * (bounds.height - 100) + 'px';
-            
-            randomFact.style.display = 'block';
-            
-            setTimeout(() => {
-                randomFact.style.display = 'none';
-                if (gameActive) showRandomBrandFact();
-            }, 3000);
         }
 
         function createIngredients() {
@@ -521,8 +479,6 @@
             initObstacles();
             
             startTimer();
-            
-            setTimeout(showRandomBrandFact, 2000);
         }
 
         function updateTimerText(seconds) {
