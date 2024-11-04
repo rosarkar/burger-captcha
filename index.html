@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Brand CAPTCHA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .captcha-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .success-message {
+            display: none;
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .failure-message {
+            display: none;
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .ingredient {
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+        
+        .ingredient.dragging {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        
+        .drop-zone {
+            background: rgba(255, 215, 0, 0.3);
+            border: 2px dashed #ffd700;
+            border-radius: 10px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .obstacle {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .timer-bar {
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .timer-progress {
+            height: 100%;
+            background: #d52b1e;
+            width: 100%;
+            transition: width linear 30s;
+        }
+
+        .reset-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: #d52b1e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .reset-button:hover {
+            background: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Interactive Brand CAPTCHA</h1>
+        <p>Stack the burger ingredients in the correct order while avoiding obstacles</p>
+    </div>
+    
+    <div class="captcha-container" id="captchaContainer">
+        <div class="timer-bar">
+            <div class="timer-progress" id="timerProgress"></div>
+        </div>
+
+        <!-- Ingredients -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+            <div class="ingredient" draggable="true" data-type="base" data-order="1">
+                Base Bun
+            </div>
+            <div class="ingredient" draggable="true" data-type="patty" data-order="2">
+                Beef Patty
+            </div>
+            <div class="ingredient" draggable="true" data-type="middle" data-order="3">
+                Middle Bun
+            </div>
+            <div class="ingredient" draggable="true" data-type="crown" data-order="4">
+                Crown Bun
+            </div>
+        </div>
+
+        <!-- Moving Obstacles -->
+        <div id="obstacle1" class="obstacle">⚠️</div>
+        <div id="obstacle2" class="obstacle">⚠️</div>
+        <div id="obstacle3" class="obstacle">⚠️</div>
+
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+            Drop ingredients here
+        </div>
+    </div>
+
+    <div class="success-message" id="successMessage">
+        Verification successful! Thank you for completing the challenge.
+    </div>
+    <div class="failure-message" id="failureMessage">
+        Challenge failed. Please try again!
+    </div>
+
+    <button class="reset-button" id="resetButton">Reset Challenge</button>
+
+    <script>
+        let isDragging = false;
+        let startTime = null;
+        let timerInterval = null;
+        let currentStack = [];
+        let obstacles = [];
+        
+        // Initialize the game
+        function initGame() {
+            // Reset variables
+            currentStack = [];
+            document.getElementById('dropZone').innerHTML = 'Drop ingredients here';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('failureMessage').style.display = 'none';
+            
+            // Reset timer
+            const timerProgress = document.getElementById('timerProgress');
+            timerProgress.style.width = '100%';
+            
+            // Initialize obstacles
+            initObstacles();
+            
+            // Start timer
+            startTime = Date.now();
+            startTimer();
+        }
+
+        // Initialize obstacle movements
+        function initObstacles() {
+            obstacles = [
+                { element: document.getElementById('obstacle1'), x: 0, y: 0, dx: 2, dy: 1 },
+                { element: document.getElementById('obstacle2'), x: 200, y: 0, dx: -2, dy: 1.5 },
+                { element: document.getElementById('obstacle3'), x: 400, y: 0, dx: 1, dy: -1 }
+            ];
+
+            // Start obstacle animation
+            requestAnimationFrame(moveObstacles);
+        }
+
+        // Move obstacles
+        function moveObstacles() {
+            const container = document.getElementById('captchaContainer');
+            const bounds = container.getBoundingClientRect();
+
+            obstacles.forEach(obstacle => {
+                // Update position
+                obstacle.x += obstacle.dx;
+                obstacle.y += obstacle.dy;
+
+                // Bounce off walls
+                if (obstacle.x <= 0 || obstacle.x >= bounds.width - 30) obstacle.dx *= -1;
+                if (obstacle.y <= 0 || obstacle.y >= bounds.height - 30) obstacle.dy *= -1;
+
+                // Update element position
+                obstacle.element.style.left = `${obstacle.x}px`;
+                obstacle.element.style.top = `${obstacle.y}px`;
+            });
+
+            requestAnimationFrame(moveObstacles);
+        }
+
+        // Start timer
+        function startTimer() {
+            const timerProgress = document.getElementById('timerProgress');
+            timerProgress.style.width = '0';
+            
+            // Check time after 30 seconds
+            setTimeout(() => {
+                if (currentStack.length < 4) {
+                    showFailure();
+                }
+            }, 30000);
+        }
+
+        // Initialize drag and drop
+        document.querySelectorAll('.ingredient').forEach(ingredient => {
+            ingredient.addEventListener('dragstart', (e) => {
+                isDragging = true;
+                e.target.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', e.target.dataset.type);
+            });
+
+            ingredient.addEventListener('dragend', (e) => {
+                isDragging = false;
+                e.target.classList.remove('dragging');
+            });
+        });
+
+        // Drop zone events
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('text/plain');
+            const order = parseInt(document.querySelector(`[data-type="${type}"]`).dataset.order);
+
+            // Check if this is the correct next piece
+            if (order === currentStack.length + 1) {
+                currentStack.push(type);
+                updateDropZone();
+                checkCompletion();
+            }
+        });
+
+        // Update drop zone display
+        function updateDropZone() {
+            dropZone.innerHTML = currentStack.map(type => 
+                `<div>${document.querySelector(`[data-type="${type}"]`).textContent}</div>`
+            ).join('');
+        }
+
+        // Check for completion
+        function checkCompletion() {
+            if (currentStack.length === 4) {
+                const timeTaken = Date.now() - startTime;
+                if (timeTaken <= 30000) {
+                    showSuccess();
+                } else {
+                    showFailure();
+                }
+            }
+        }
+
+        // Show success message
+        function showSuccess() {
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('failureMessage').style.display = 'none';
+        }
+
+        // Show failure message
+        function showFailure() {
+            document.getElementById('failureMessage').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Reset button
+        document.getElementById('resetButton').addEventListener('click', initGame);
+
+        // Initialize game on load
+        initGame();
+    </script>
+</body>
+</html>
